@@ -1,11 +1,7 @@
 # Getting Over It with Real World Hammer
 
-## Run
+**Resources:**
 
-Below assumes that `opencv` is extracted into `C:\tool\opencv\`.
-
-* Change path to `opencv` in `build.gradle.kts` appropriately
-* Specify these arguments when running app (e.g. via IntelliJ IDEA)
-  ```
-  -Djava.library.path="C:\\tool\\opencv\\opencv\\build\\java\\x64"
-  ```
+* [Ball Tracking with OpenCV](https://www.pyimagesearch.com/2015/09/14/ball-tracking-with-opencv/)
+* [Simple HSV color picker](https://github.com/alieldinayman/HSV-Color-Picker)
+* [Pyhon DirectInput Mouse Relative Moving act not as expected](https://stackoverflow.com/questions/50601200/pyhon-directinput-mouse-relative-moving-act-not-as-expected)
