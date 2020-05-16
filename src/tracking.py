@@ -5,6 +5,19 @@ import time
 import cv2
 import imutils
 from imutils.video import VideoStream
+import configparser
+
+config = configparser.ConfigParser()
+config.read('tracking.ini')
+
+videoSource = config.getint('tracking', 'videoSource')
+color1LowerBound = tuple(map(int, config['tracking']['color1LowerBound'].split(",")))
+color1UpperBound = tuple(map(int, config['tracking']['color1UpperBound'].split(",")))
+color2LowerBound = tuple(map(int, config['tracking']['color2LowerBound'].split(",")))
+color2UpperBound = tuple(map(int, config['tracking']['color2UpperBound'].split(",")))
+applyFullHdFix = config.getboolean('tracking', 'applyFullHdFix')
+showCameraSettings = config.getboolean('tracking', 'showCameraSettings')
+scaleFrameWidth = config.getint('tracking', 'scaleFrameWidth')
 
 ###########################
 # Mouse movement
@@ -60,32 +73,23 @@ def move_mouse_to(x, y):
 # Tracking
 ###########################
 
-# Color ranges
-
-hammerGreenLower = (12, 43, 6)
-hammerGreenUpper = (62, 93, 255)
-
-ballGreenLower = (48, 90, 6)
-ballGreenUpper = (88, 162, 150)
-
 # Open video stream
-videoSource = 1
 vs = VideoStream(src=videoSource + cv2.CAP_DSHOW).start()
-# Enable Full HD
-vs.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-vs.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-# Enable compression
-vs.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
-# Open webcam settings window
-vs.stream.set(cv2.CAP_PROP_SETTINGS, 1)
+if applyFullHdFix:
+    # Enable Full HD
+    vs.stream.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+    vs.stream.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+    # Enable compression
+    vs.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+if showCameraSettings:
+    # Open webcam settings window
+    vs.stream.set(cv2.CAP_PROP_SETTINGS, 1)
 
 # Allow camera to warm up
 time.sleep(2.0)
 
 # Previous tracked center
 prevCenter = None
-# Resized frame width
-width = 600
 # Minimum tracking radius
 minRadius = 5
 
@@ -98,13 +102,13 @@ while True:
         break
 
     # Resize the frame, blur it, and convert it to the HSV color space
-    frame = imutils.resize(frame, width=width)
+    frame = imutils.resize(frame, width=scaleFrameWidth)
     blurred = cv2.GaussianBlur(frame, (11, 11), 0)
     hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
     # Construct a masks for the colors "green"
-    hammerMask = cv2.inRange(hsv, hammerGreenLower, hammerGreenUpper)
-    ballMask = cv2.inRange(hsv, ballGreenLower, ballGreenUpper)
+    hammerMask = cv2.inRange(hsv, color1LowerBound, color1UpperBound)
+    ballMask = cv2.inRange(hsv, color2LowerBound, color2UpperBound)
 
     # Combine 2 masks
     mask = cv2.bitwise_or(hammerMask, ballMask)
@@ -152,7 +156,7 @@ while True:
         break
 
 # Otherwise, release the camera
-vs.release()
+vs.stop()
 
 # Close all windows
 cv2.destroyAllWindows()
